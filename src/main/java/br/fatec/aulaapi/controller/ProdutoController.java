@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -64,4 +67,47 @@ public class ProdutoController {
 		
 		return listaProdutos;
 	}
+	
+	@DeleteMapping(path = "/produtos/{codigo}")
+	public ResponseEntity<?> deleteById(@PathVariable(name="codigo") Integer codigo) {
+		
+		Produto produtoProcurado = 
+				listaProdutos
+				.stream()
+				.filter(p -> p.getCodigo().equals(codigo))
+				.findFirst()
+				.orElse(null);
+		
+		listaProdutos.remove(produtoProcurado);
+		
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+	}
+	
+	
+	@PutMapping(path = "/produtos/{codigo}")
+	public ResponseEntity<?> putProduto(@PathVariable(name = "codigo") Integer codigo, 
+									    @RequestBody Produto produtoAlterado) {
+		
+		//procura-se o produto pelo codigo (path)
+		Produto produtoProcurado = 
+				listaProdutos
+				.stream()
+				.filter(p -> p.getCodigo().equals(codigo))
+				.findFirst()
+				.orElse(null);
+		
+		//se o produto nao existe
+		if(produtoProcurado == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto nao existe");
+		}
+		
+		listaProdutos.remove(produtoProcurado);
+		
+		produtoAlterado.setCodigo(codigo);
+		listaProdutos.add(produtoAlterado);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(produtoAlterado);
+	}
+	
+	
 }
