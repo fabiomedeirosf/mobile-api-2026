@@ -3,6 +3,7 @@ package br.fatec.aulaapi.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +16,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.fatec.aulaapi.dto.Produto;
+import br.fatec.aulaapi.repository.ProdutoRepository;
 import jakarta.websocket.server.PathParam;
 
 @RestController
 public class ProdutoController {
+	
+	@Autowired
+	private ProdutoRepository produtoRepository;
 	
 	private static final List<Produto> listaProdutos = new ArrayList<Produto>();
 
@@ -35,25 +40,17 @@ public class ProdutoController {
 			.body("Descrição inválida");
 		}
 		
-		//gerar o codigo produto
-		int codigo = (int) (Math.random() * 1000);
-		novoProduto.setCodigo(codigo);
-		
-		//armazenar o produto na lista em memoria
-		listaProdutos.add(novoProduto);
-		return ResponseEntity.status(HttpStatus.CREATED).body(novoProduto);
+		//salva no bd
+		Produto p = this.produtoRepository.save(novoProduto);
+		return ResponseEntity.status(HttpStatus.CREATED).body(p);
 	}
 	
 	@GetMapping(path = "/produtos/{codigo}")
 	public ResponseEntity<?> getById(@PathVariable(name = "codigo") 
 									 Integer codigo) {
 		
-		Produto produtoProcurado = null;
-		for(Produto p : listaProdutos) {
-			if(p.getCodigo().equals(codigo)) {
-				produtoProcurado = p;
-			}
-		}
+		Produto produtoProcurado = 
+				this.produtoRepository.findById(codigo).get();
 		
 		if(produtoProcurado == null) {
 			return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
@@ -65,7 +62,7 @@ public class ProdutoController {
 	@GetMapping(path = "/produtos")
 	public List<Produto> getProdutos() {
 		
-		return listaProdutos;
+		return this.produtoRepository.findAll();
 	}
 	
 	@DeleteMapping(path = "/produtos/{codigo}")
